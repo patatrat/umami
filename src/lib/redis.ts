@@ -32,9 +32,11 @@ class UmamiRedisClient {
   }
 
   async get(key: string) {
+    await this.connect();
+
+    const data = await this.client.get(key);
+
     try {
-      await this.connect();
-      const data = await this.client.get(key);
       return JSON.parse(data as string);
     } catch {
       return null;
@@ -42,53 +44,41 @@ class UmamiRedisClient {
   }
 
   async set(key: string, value: any, time?: number) {
-    try {
-      await this.connect();
-      const ttl = time && time > 0 ? time : DEFAULT_TTL;
-      return this.client.set(key, JSON.stringify(value), { EX: ttl });
-    } catch {
-      return null;
-    }
+    await this.connect();
+
+    const ttl = time && time > 0 ? time : DEFAULT_TTL;
+
+    return this.client.set(key, JSON.stringify(value), { EX: ttl });
   }
 
   async del(key: string) {
-    try {
-      await this.connect();
-      return this.client.del(key);
-    } catch {
-      return null;
-    }
+    await this.connect();
+
+    return this.client.del(key);
   }
 
   async incr(key: string) {
-    try {
-      await this.connect();
-      return this.client.incr(key);
-    } catch {
-      return null;
-    }
+    await this.connect();
+
+    return this.client.incr(key);
   }
 
   async expire(key: string, seconds: number) {
-    try {
-      await this.connect();
-      return this.client.expire(key, seconds);
-    } catch {
-      return null;
-    }
+    await this.connect();
+
+    return this.client.expire(key, seconds);
   }
 
   async rateLimit(key: string, limit: number, seconds: number): Promise<boolean> {
-    try {
-      await this.connect();
-      const res = await this.client.incr(key);
-      if (res === 1) {
-        await this.client.expire(key, seconds);
-      }
-      return res >= limit;
-    } catch {
-      return false;
+    await this.connect();
+
+    const res = await this.client.incr(key);
+
+    if (res === 1) {
+      await this.client.expire(key, seconds);
     }
+
+    return res >= limit;
   }
 
   async fetch(key: string, query: () => Promise<any>, time?: number) {
