@@ -1,6 +1,6 @@
 import { getCompareDate } from '@/lib/date';
 import { getQueryFilters, parseRequest } from '@/lib/request';
-import { json, unauthorized } from '@/lib/response';
+import { cachedJson, unauthorized } from '@/lib/response';
 import { filterParams, withDateRange } from '@/lib/schema';
 import { canViewWebsite } from '@/permissions';
 import { getPageviewStats, getSessionStats } from '@/queries/sql';
@@ -52,7 +52,7 @@ export async function GET(
       }),
     ]);
 
-    return json({
+    return cachedJson({
       pageviews,
       sessions,
       startDate: filters.startDate,
@@ -66,5 +66,5 @@ export async function GET(
     });
   }
 
-  return json({ pageviews, sessions });
+  return cachedJson({ pageviews, sessions });
 }

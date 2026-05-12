@@ -53,8 +53,9 @@ export function md5(...args: string[]) {
   return crypto.createHash('md5').update(args.join('')).digest('hex');
 }
 
+let _secret: string;
 export function secret() {
-  return hash(process.env.APP_SECRET || process.env.DATABASE_URL);
+  return (_secret ??= hash(process.env.APP_SECRET || process.env.DATABASE_URL));
 }
 
 export function uuid(...args: any) {

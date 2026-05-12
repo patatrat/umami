@@ -1,3 +1,4 @@
+import redis from '@/lib/redis';
 import { parseRequest } from '@/lib/request';
 import { json } from '@/lib/response';
 
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
   }
 
   return json({
+    redis: redis.enabled,
     cloudMode: !!process.env.CLOUD_MODE,
     faviconUrl: process.env.FAVICON_URL,
     linksUrl: process.env.LINKS_URL,

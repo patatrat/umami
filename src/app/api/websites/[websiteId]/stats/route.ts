@@ -1,6 +1,6 @@
 import { getCompareDate } from '@/lib/date';
 import { getQueryFilters, parseRequest } from '@/lib/request';
-import { json, unauthorized } from '@/lib/response';
+import { cachedJson, unauthorized } from '@/lib/response';
 import { filterParams, withDateRange } from '@/lib/schema';
 import { canViewWebsite } from '@/permissions';
 import { getWebsiteStats } from '@/queries/sql';
@@ -41,5 +41,5 @@ export async function GET(
     endDate,
   });
 
-  return json({ ...data, comparison });
+  return cachedJson({ ...data, comparison });
 }
