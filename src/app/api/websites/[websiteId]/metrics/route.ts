@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { EVENT_COLUMNS, EVENT_TYPE, SESSION_COLUMNS } from '@/lib/constants';
 import { getQueryFilters, parseRequest } from '@/lib/request';
-import { badRequest, json, unauthorized } from '@/lib/response';
+import { badRequest, cachedJson, unauthorized } from '@/lib/response';
 import { filterParams, searchParams, withDateRange } from '@/lib/schema';
 import { canViewWebsite } from '@/permissions';
 import {
@@ -45,20 +45,20 @@ export async function GET(
   if (SESSION_COLUMNS.includes(type)) {
     const data = await getSessionMetrics(websiteId, { type, limit, offset }, filters);
 
-    return json(data);
+    return cachedJson(data);
   }
 
   if (EVENT_COLUMNS.includes(type)) {
     if (type === 'event') {
       filters.eventType = EVENT_TYPE.customEvent;
-      return json(await getEventMetrics(websiteId, { type, limit, offset }, filters));
+      return cachedJson(await getEventMetrics(websiteId, { type, limit, offset }, filters));
     } else {
-      return json(await getPageviewMetrics(websiteId, { type, limit, offset }, filters));
+      return cachedJson(await getPageviewMetrics(websiteId, { type, limit, offset }, filters));
     }
   }
 
   if (type === 'channel') {
-    return json(await getChannelMetrics(websiteId, filters));
+    return cachedJson(await getChannelMetrics(websiteId, filters));
   }
 
   return badRequest();

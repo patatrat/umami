@@ -6,6 +6,12 @@ export function json(data: Record<string, any> = {}) {
   return Response.json(data);
 }
 
+export function cachedJson(data: Record<string, any> = {}, maxAge = 60) {
+  return Response.json(data, {
+    headers: { 'Cache-Control': `private, max-age=${maxAge}, stale-while-revalidate=300` },
+  });
+}
+
 export function badRequest(error?: Record<string, any>) {
   return Response.json(
     {
