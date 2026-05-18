@@ -1,6 +1,6 @@
 'use client';
 import { Column, Tab, TabList, TabPanel, Tabs } from '@umami/react-zen';
-import { type Key, useState } from 'react';
+import { type Key, useEffect, useState } from 'react';
 import { SessionModal } from '@/app/(main)/websites/[websiteId]/sessions/SessionModal';
 import { WebsiteControls } from '@/app/(main)/websites/[websiteId]/WebsiteControls';
 import { LoadingPanel } from '@/components/common/LoadingPanel';
@@ -19,7 +19,13 @@ import { EventsDataTable } from './EventsDataTable';
 const KEY_NAME = 'umami.events.tab';
 
 export function EventsPage({ websiteId }) {
-  const [tab, setTab] = useState(getItem(KEY_NAME) || 'chart');
+  const [tab, setTab] = useState('chart');
+
+  useEffect(() => {
+    const stored = getItem(KEY_NAME);
+    if (stored) setTab(stored);
+  }, []);
+
   const { isAllTime } = useDateRange();
   const { t, labels, getErrorMessage } = useMessages();
   const { data, isLoading, isFetching, error } = useEventStatsQuery({
@@ -33,34 +39,35 @@ export function EventsPage({ websiteId }) {
 
   const { events, visitors, visits, uniqueEvents, comparison } = data || {};
 
-  const metrics = data
-    ? [
-        {
-          value: visitors,
-          label: t(labels.visitors),
-          change: visitors - comparison.visitors,
-          formatValue: formatLongNumber,
-        },
-        {
-          value: visits,
-          label: t(labels.visits),
-          change: visits - comparison.visits,
-          formatValue: formatLongNumber,
-        },
-        {
-          value: events,
-          label: t(labels.events),
-          change: events - comparison.events,
-          formatValue: formatLongNumber,
-        },
-        {
-          value: uniqueEvents,
-          label: t(labels.uniqueEvents),
-          change: uniqueEvents - comparison.uniqueEvents,
-          formatValue: formatLongNumber,
-        },
-      ]
-    : null;
+  const metrics =
+    data && comparison
+      ? [
+          {
+            value: visitors,
+            label: t(labels.visitors),
+            change: visitors - comparison.visitors,
+            formatValue: formatLongNumber,
+          },
+          {
+            value: visits,
+            label: t(labels.visits),
+            change: visits - comparison.visits,
+            formatValue: formatLongNumber,
+          },
+          {
+            value: events,
+            label: t(labels.events),
+            change: events - comparison.events,
+            formatValue: formatLongNumber,
+          },
+          {
+            value: uniqueEvents,
+            label: t(labels.uniqueEvents),
+            change: uniqueEvents - comparison.uniqueEvents,
+            formatValue: formatLongNumber,
+          },
+        ]
+      : null;
 
   return (
     <Column gap="3">
