@@ -18,18 +18,25 @@ export async function GET(
   const { auth, query, error } = await parseRequest(request, schema);
 
   if (error) {
+    console.error('[event-data/properties] validation error');
     return error();
   }
 
   const { websiteId } = await params;
 
   if (!(await canViewWebsite(auth, websiteId))) {
+    console.error('[event-data/properties] unauthorized');
     return unauthorized();
   }
 
   const filters = await getQueryFilters(query, websiteId);
 
-  const data = await getEventDataProperties(websiteId, filters);
-
-  return json(data);
+  try {
+    const data = await getEventDataProperties(websiteId, filters);
+    console.log('[event-data/properties] success rows=' + (Array.isArray(data) ? data.length : 'non-array'));
+    return json(data);
+  } catch (err: any) {
+    console.error('[event-data/properties] error', err?.message, err?.stack);
+    throw err;
+  }
 }
