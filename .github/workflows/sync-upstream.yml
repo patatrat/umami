@@ -1,0 +1,62 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # every Monday at 6am UTC
+  workflow_dispatch:       # allow manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/umami-software/umami.git
+          git fetch upstream master
+
+      - name: Check if behind
+        id: check
+        run: |
+          BEHIND=$(git rev-list HEAD..upstream/master --count)
+          echo "behind=$BEHIND" >> $GITHUB_OUTPUT
+
+      - name: Attempt clean merge
+        if: steps.check.outputs.behind != '0'
+        id: merge
+        run: |
+          git merge upstream/master --no-edit && echo "clean=true" >> $GITHUB_OUTPUT || echo "clean=false" >> $GITHUB_OUTPUT
+
+      - name: Push if clean
+        if: steps.merge.outputs.clean == 'true'
+        run: git push origin master
+
+      - name: Open PR if conflicts
+        if: steps.merge.outputs.clean == 'false'
+        run: |
+          git merge --abort || true
+          BRANCH="sync/upstream-$(date +%Y-%m-%d)"
+          git checkout -b "$BRANCH"
+          git merge upstream/master --no-edit -X ours || true
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "Sync upstream $(date +%Y-%m-%d) [needs review]" \
+            --body "Upstream has changes that could not be auto-merged cleanly. Review conflicts before merging." \
+            --base master \
+            --head "$BRANCH" \
+            --draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
