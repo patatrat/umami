@@ -21,26 +21,19 @@ export async function GET(
   const { auth, query, error } = await parseRequest(request, schema);
 
   if (error) {
-    console.error('[events/series] validation error');
     return error();
   }
 
   const { websiteId } = await params;
 
   if (!(await canViewWebsite(auth, websiteId))) {
-    console.error('[events/series] unauthorized');
     return unauthorized();
   }
 
   const { limit } = query;
   const filters = await getQueryFilters(query, websiteId);
 
-  try {
-    const data = await getEventStats(websiteId, { limit }, filters);
-    console.log('[events/series] success rows=' + (Array.isArray(data) ? data.length : 'non-array'));
-    return json(data);
-  } catch (err: any) {
-    console.error('[events/series] error', err?.message, err?.stack);
-    throw err;
-  }
+  const data = await getEventStats(websiteId, { limit }, filters);
+
+  return json(data);
 }

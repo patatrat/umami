@@ -17,25 +17,18 @@ export async function GET(
   const { auth, query, error } = await parseRequest(request, schema);
 
   if (error) {
-    console.error('[events] validation error');
     return error();
   }
 
   const { websiteId } = await params;
 
   if (!(await canViewWebsite(auth, websiteId))) {
-    console.error('[events] unauthorized');
     return unauthorized();
   }
 
   const filters = await getQueryFilters(query, websiteId);
 
-  try {
-    const data = await getWebsiteEvents(websiteId, filters);
-    console.log('[events] success', JSON.stringify({ count: (data as any)?.count }));
-    return json(data);
-  } catch (err: any) {
-    console.error('[events] error', err?.message, err?.stack);
-    throw err;
-  }
+  const data = await getWebsiteEvents(websiteId, filters);
+
+  return json(data);
 }
